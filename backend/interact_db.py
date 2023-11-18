@@ -1,6 +1,9 @@
 import sqlite3
 from sqlite3 import Error
 import sys
+import time
+
+DB = "/data/check24.db"
 
 
 def create_db(db_file, f1, f2, f3):
@@ -150,7 +153,8 @@ def query_ranking(db_file, post_lon, post_lat, group, index):
     return ranking_list
 
 
-def query_ranking_opt1(db_file, post_lon, post_lat, group):
+
+def query_ranking_opt1(db_file, post_lon, post_lat, group, index):
     # Connect to database
     con = sqlite3.connect(db_file)
     cursor = con.cursor()
@@ -194,6 +198,28 @@ def query_ranking_opt1(db_file, post_lon, post_lat, group):
     con.close()
 
     return ranking_list
+
+
+
+def performanceComparison():
+    # get the start time
+    st = time.time()
+    query_ranking(DB, 13.719, 51.06, 'group_a', 0)
+    # get the end time
+    et = time.time()
+
+    st1 = time.time()
+    query_ranking_opt1(DB, 13.719, 51.06, 'group_a', 0)
+    et1 = time.time()
+
+    # get the execution time
+    elapsed_time = et - st
+    elapsed_time1 = et1 - st1
+    print('Execution time for query_ranking:', elapsed_time, 'seconds')
+    print('Execution time for query_ranking_opt1:', elapsed_time1, 'seconds')
+
+    
+
 
 
 def update_craftman_databases(db_file, craftman_id, max_driving_distance, pic_score, desc_score):
