@@ -2,58 +2,37 @@
 
 from flask import Flask, jsonify
 import sqlite3
+import os
+from initDb import *
 
 app = Flask(__name__)
 
+DB = "check24.db"
+PC = "./data/postcode.sql"
+QF = "./data/quality_factor_score.sql"
+SPP = "./data/service_provider_profile.sql"
+
 # Initialize SQLite database
-conn = sqlite3.connect('/data/test.db')
-cursor = conn.cursor()
-
-#########################################################
-################# EXAMPLE DATABASE CODE #################
-#########################################################
-
-# Create a users table
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY,
-        username TEXT NOT NULL,
-        email TEXT NOT NULL
-    )
-''')
-
-# Sample data
-sample_data = [
-    ('Maler', 'maler@tum.de'),
-    ('Handwerker', 'handwerker@tum.de')
-]
-
-# Insert sample data
-cursor.executemany("INSERT INTO users (username, email) VALUES (?, ?)", sample_data)
-
-# Commit changes and close the connection
-conn.commit()
-conn.close()
-
+if(not os.path.exists(DB)):
+    createDB(DB, PC, QF, SPP)
 
 @app.route('/')
 def example():
     # Connect to the SQLite database
-    conn = sqlite3.connect('/data/test.db')
+    conn = sqlite3.connect(DB)
     cursor = conn.cursor()
 
     # Query data from the users table
-    cursor.execute("SELECT * FROM users")
+    cursor.execute("SELECT * FROM postcode LIMITS 10")
     rows = cursor.fetchall()
 
     # Close the connection
     conn.close()
 
     # Convert rows to a list of dictionaries
-    user_list = [{'id': row[0], 'username': row[1], 'email': row[2]} for row in rows]
+    postcodeList = [{'postcode': row[0], 'lon': row[1], 'lat': row[2]} for row in rows]
 
-    return jsonify(users=user_list)
-
+    return jsonify(postcodes=postcodeList)
 
 #########################################################
 ################# EXAMPLE DATABASE CODE #################
