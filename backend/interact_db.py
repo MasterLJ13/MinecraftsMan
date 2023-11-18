@@ -110,20 +110,20 @@ def query_ranking(db_file, post_lon, post_lat, group, index):
 
     query = f"""
             WITH CRAFTSMEN_DIST as (
-                SELECT *, abs((acos((sin(lat)*sin({post_lat})) + (cos(lat) * cos({post_lat}) * cos(lon - {post_lon})) )*{r})) as dist
+                SELECT *, abs((acos((sin(lat)*sin({post_lat})) + (cos(lat) * cos({post_lat}) * cos(lon - {post_lon})) ) * {r})) as dist
                 FROM service_provider_profile
             ),
             NEAR_CRAFTSMEN_DIST as (
                 SELECT *
                 FROM CRAFTSMEN_DIST
-                WHERE dist < CAST(((max_driving_distance/1000) + {postcode_extension_distance_bonus}) AS float)
+                WHERE dist < CAST(((max_driving_distance / 1000) + {postcode_extension_distance_bonus}) AS float)
             ),
             NEAR_CRAFTSMEN_WITH_PROFILE_SCORE as(
                 SELECT m.*, (0.4 * q.profile_picture_score) + (0.6 * q.profile_description_score) as profile_score
                 FROM NEAR_CRAFTSMEN_DIST m JOIN quality_factor_score q ON m.id = q.profile_id
             ),
             NEAR_CRAFTSMEN_WITH_RANK_HELPER as(
-                SELECT *, 1-(dist/80) as dist_score, CASE WHEN dist>80 THEN 0.01 ELSE 0.15 END as dist_weight
+                SELECT *, 1 - (dist / 80) as dist_score, CASE WHEN dist > 80 THEN 0.01 ELSE 0.15 END as dist_weight
                 FROM NEAR_CRAFTSMEN_WITH_PROFILE_SCORE
             ),
             NEAR_CRAFTSMEN_WITH_RANK as (
@@ -133,7 +133,7 @@ def query_ranking(db_file, post_lon, post_lat, group, index):
             SELECT id, first_name || ' ' || last_name as name, rankingScore
             FROM NEAR_CRAFTSMEN_WITH_RANK
             ORDER BY rankingScore desc
-            LIMIT {index}, 20
+            LIMIT {index}, {index} + 20
         """
 
     cursor.execute(query)
@@ -148,10 +148,6 @@ def query_ranking(db_file, post_lon, post_lat, group, index):
     con.close()
 
     return ranking_list
-
-
-
-
 
 
 def query_ranking_opt1(db_file, post_lon, post_lat, group):
