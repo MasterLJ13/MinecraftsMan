@@ -55,3 +55,22 @@ def query_radius(db_file, lon, lat, rad):
     except Error as e:
         print("Error while connecting:", e)
         return []
+    
+    
+def add_profile_score_to_providers(db_file):
+    try:
+        print("Connecting to database")
+        conn = sqlite3.connect(db_file)
+        cursor = conn.cursor()
+        query = f"""
+            WITH PROFILE_SCORE as (
+                SELECT id, score = 0.4 * q.profile_picture_score + 0.6 * q.profile_description_score 
+                FROM quality_factor_score q
+            )
+            SELECT * 
+            FROM PROFILE_SCORE
+        """
+        cursor.execute(query)
+    except Error as e:
+        print(e)
+
