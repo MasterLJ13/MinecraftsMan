@@ -1,0 +1,23 @@
+/* StyledList.css */
+
+.custom-list {
+    list-style-type: none; /* Change list marker style to square */
+    font-family: 'Arial', sans-serif; /* Change font family */
+    color: #000; /* Change text color */
+    margin: 10px;
+    padding: 2%;
+    border: 1px solid #bbb;
+    background-color: #fff;
+    text-align: left;
+    
+  }
+  
+  .custom-list li {
+    margin-bottom: 8px; /* Add spacing between list items */
+  }
+  
+  .custom-list li p {
+    margin: 0; /* Remove default margin for paragraphs inside list items */
+  }
+
+  

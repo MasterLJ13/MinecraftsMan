@@ -1,0 +1,41 @@
+body {
+  margin: 0;
+  font-family: 'Arial', sans-serif;
+  background-color: #fff;
+}
+
+.App {
+  text-align: center;
+}
+
+.banner {
+  background-color: #063773;
+  color: #fff;
+  padding: 2.5%;
+}
+
+.banner2 {
+  background-color: #005EA8;
+  color: #fff;
+  padding: 1%;
+}
+
+.content {
+  padding: 20px;
+}
+
+input {
+  padding: 8px;
+  margin-right: 10px;
+  border: 2px solid #ffbb1c;
+  border-radius: 6px;
+}
+
+button {
+  padding: 8px 16px;
+  background-color: #ffbb1c;
+  border-radius: 6px;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}

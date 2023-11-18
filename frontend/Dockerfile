@@ -14,4 +14,4 @@ RUN npm install
 EXPOSE 3000
 
 # Run npm start when the container launches
-# CMD ["npm", "start"]
+CMD ["npm", "start"]
