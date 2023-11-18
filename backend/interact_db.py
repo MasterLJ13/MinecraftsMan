@@ -68,12 +68,12 @@ def query_ranking(db_file, post_lon, post_lat, group):
                 FROM NEAR_MALER_WITH_PROFILE_SCORE
             ),
             NEAR_MALER_WITH_RANK as (
-                SELECT *, (dist_weight * dist_score + (1 - dist_weight) * profile_score) as rank
+                SELECT *, (dist_weight * dist_score + (1 - dist_weight) * profile_score) as rankingScore
                 FROM NEAR_MALER_WITH_RANK_HELPER
             )
-            SELECT *
+            SELECT id, first_name || ' ' || last_name as name, rankingScore
             FROM NEAR_MALER_WITH_RANK
-            ORDER BY rank desc
+            ORDER BY rankingScore desc
             LIMIT 20
         """
 
