@@ -36,50 +36,38 @@ def get_craftsmen():
     # optional pagination arg
 
     try:
-        start_index = request.args.get("index", type=int)
-    except:
-        return jsonify({"error": "index must be numerical"}), 404
+        start_index = request.args.get("index", default=0, type=int)
+    except ValueError:
+        return jsonify({"error": "index must be numerical"}), 400
+
+    # todo: translate plz into location
+
+    #in case plz not found in database -> thow error about invalid plz
 
     # todo: access db to get 20 craftsmen
-
+    # use index to get first 20, or second 20... use start_index
     craftsman = get_hardcoded_craftsman()
 
     return jsonify({"craftsmen": craftsman})
 
 
-@app.route('/craftman/<id>', methods=['PATCH'])
-def user(id):
-    """interface PatchRequest {
-          // At least one of the attributes should be defined
-          maxDrivingDistance?: number;
-          profilePictureScore?: number;
-          profileDescriptionScore?: number;
-    }
-    interface PatchResponse {
-      id: number;
-      updated: {
-        maxDrivingDistance: number;
-        profilePictureScore: number;
-        profileDescriptionScore: number;
-      }
-    }
-    """
-    # update MAX_DRIVING_DISTANCE
-    # update PROFILE_PICTURE_SCORE
-    # update PROFILE_DESCRIPTION_SCORE
+@app.route('/craftman/<craftsman_id>', methods=['PATCH'])
+def user(craftsman_id):
+    maxDrivingDistance = request.form.get("maxDrivingDistance")
+    profilePictureScore = request.form.get("profilePictureScore")
+    profileDescriptionScore = request.form.get("profileDescriptionScore")
 
-    maxDrivingDistance = request.form["maxDrivingDistance"]
-    profilePictureScore = request.form["profilePictureScore"]
-    profileDescriptionScore = request.form["profileDescriptionScore"]
+    if maxDrivingDistance is None and profilePictureScore is None and profileDescriptionScore is None:
+        return jsonify({"error": "maxDrivingDistance or profilePictureScore or profileDescriptionScore needs to be specified"}), 400
 
-    # recalculate rankings?
+    # todo recalculate rankings based on the new values
 
     return jsonify({"patchresponse": {
         "id": id,
-        "updated":{
-            "maxDrivingDistance": 0,
-            "profilePictureScore": 0,
-            "profileDescriptionScore": 0,
+        "updated": {
+            "maxDrivingDistance": maxDrivingDistance,
+            "profilePictureScore": profilePictureScore,
+            "profileDescriptionScore": profileDescriptionScore,
         },
     }})
 

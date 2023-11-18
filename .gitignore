@@ -5,3 +5,4 @@
 .ll
 .mlir
 build/
+**/check24repo
