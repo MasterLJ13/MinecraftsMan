@@ -44,7 +44,6 @@ def get_craftsmen():
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
 
-    index = 0
     try:
         index = request.args.get("index", type=int)
         if index is None:

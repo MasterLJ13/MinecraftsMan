@@ -238,7 +238,6 @@ def update_craftman_databases(db_file, craftman_id, max_driving_distance, pic_sc
         cursor.execute(query)
         updated["profilePictureScore"] = pic_score
 
-
     if desc_score:
         query = f"UPDATE quality_factor_score SET profile_description_score = {desc_score} WHERE profile_id = {craftman_id};"
         cursor.execute(query)
