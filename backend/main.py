@@ -57,6 +57,22 @@ def get_craftsmen():
 
     return jsonify({"craftsmen": query_ranking(DB, post_lon, post_lat, group, index)})
 
+@app.route('/craftman/<int:craftman_id>', methods=['PATCH'])
+def patch_craftman(craftman_id):
+    # Parse the request JSON
+    patch_data = request.json
+    if not patch_data:
+        return jsonify({'error': 'No data provided in the request body'}), 400
+
+    # Assign variables based on the request data
+    max_driving_distance = patch_data.get('maxDrivingDistance')
+    pic_score = patch_data.get('profilePictureScore')
+    desc_score = patch_data.get('profileDescriptionScore')
+
+    response_data = update_craftman_databases(DB, craftman_id, max_driving_distance, pic_score, desc_score)
+
+    return jsonify(response_data)
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=1234, debug=True)
