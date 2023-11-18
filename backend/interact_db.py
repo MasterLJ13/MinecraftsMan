@@ -165,20 +165,16 @@ def query_ranking_opt1(db_file, post_lon, post_lat, group):
     query = f"""
             WITH CRAFTSMEN_DIST as (
                 SELECT *, abs((acos((sin(lat)*sin({post_lat})) + (cos(lat) * cos({post_lat}) * cos(lon - {post_lon})) )*{r})) as dist
-                FROM service_provider_profile
+                FROM service_provider_profile_with_pscore
             ),
             NEAR_CRAFTSMEN_DIST as (
                 SELECT *
                 FROM CRAFTSMEN_DIST
                 WHERE dist < CAST(((max_driving_distance/1000) + {postcode_extension_distance_bonus}) AS float)
             ),
-            NEAR_CRAFTSMEN_WITH_PROFILE_SCORE as(
-                SELECT m.*, (0.4 * q.profile_picture_score) + (0.6 * q.profile_description_score) as profile_score
-                FROM NEAR_CRAFTSMEN_DIST m JOIN quality_factor_score q ON m.id = q.profile_id
-            ),
             NEAR_CRAFTSMEN_WITH_RANK_HELPER as(
                 SELECT *, 1-(dist/80) as dist_score, CASE WHEN dist>80 THEN 0.01 ELSE 0.15 END as dist_weight
-                FROM NEAR_CRAFTSMEN_WITH_PROFILE_SCORE
+                FROM NEAR_CRAFTSMEN_DIST
             ),
             NEAR_CRAFTSMEN_WITH_RANK as (
                 SELECT *, (dist_weight * dist_score + (1 - dist_weight) * profile_score) as rankingScore
