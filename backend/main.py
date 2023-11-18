@@ -17,8 +17,7 @@ if not os.path.exists(DB):
 # make new table with profile scores already calculated
 # add_new_service_provider_table(DB)
 # add_profile_score_to_providers(DB)
-
-performanceComparison()
+# performanceComparison()
 
 
 @app.route('/postcode_infos', methods=['GET'])
@@ -50,10 +49,11 @@ def get_craftsmen():
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
 
+    result = query_postcode_infos(DB, postalcode)
+    if not result:
+        return jsonify({"error": "postal code not found"}), 400
 
-    post_lon, post_lat, group = query_postcode_infos(DB, postalcode).values()
-
-    return jsonify({"craftsmen": query_ranking(DB, post_lon, post_lat, group, index)})
+    return jsonify({"craftsmen": query_ranking(DB, result[0], result[1], result[2], index)})
 
 @app.route('/craftman/<int:craftman_id>', methods=['PATCH'])
 def patch_craftman(craftman_id):

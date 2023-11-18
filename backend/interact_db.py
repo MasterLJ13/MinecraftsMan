@@ -7,26 +7,16 @@ DB = "/data/check24.db"
 
 
 def create_db(db_file, f1, f2, f3):
-    try:
-        print("Connecting to database")
-        conn = sqlite3.connect(db_file)
-
-        with open(f1) as f:
-            print("Read first file")
-            conn.executescript(f.read())
-        with open(f2) as f:
-            print("Read second file")
-            conn.executescript(f.read())
-        with open(f3) as f:
-            print("Read third file")
-            conn.executescript(f.read())
-        conn.close()
-        print("Importing sql files finished")
-        return True
-    except Error as e:
-        print(e)
-        return False
-
+    print("Connecting to database")
+    conn = sqlite3.connect(db_file)
+    # Read and import all three sql files
+    with open(f1) as f:
+        conn.executescript(f.read())
+    with open(f2) as f:
+        conn.executescript(f.read())
+    with open(f3) as f:
+        conn.executescript(f.read())
+    conn.close()
 
 def add_new_service_provider_table(db_file):
     try:
@@ -41,6 +31,7 @@ def add_new_service_provider_table(db_file):
         conn.close()
     except Error as e:
         print(e)
+
 
 def add_profile_score_to_providers(db_file):
     try:
@@ -65,6 +56,7 @@ def add_profile_score_to_providers(db_file):
     except Error as e:
         print(e)
 
+
 def test(db_file):
     try:
         conn = sqlite3.connect(db_file)
@@ -83,24 +75,23 @@ def test(db_file):
         print(e)
 
 
-
 def query_postcode_infos(db_file, postalcode):
     conn = sqlite3.connect(db_file)
     cursor = conn.cursor()
 
     # Get longitude, latitude and group of a postalcode
     cursor.execute(f"""
-                   SELECT lat, lon, postcode_extension_distance_group
+                   SELECT lon, lat, postcode_extension_distance_group
                    FROM postcode 
-                   WHERE postcode={postalcode}
+                   WHERE postcode LIKE '{postalcode}'
                    """)
-    post_lat, post_lon, group = cursor.fetchone()
+    res = cursor.fetchone()
 
     # Close the cursor and connection
     cursor.close()
     conn.close()
 
-    return {'lon': post_lon, 'lat': post_lat, 'group': group}
+    return res
 
 
 def query_ranking(db_file, post_lon, post_lat, group, index):
@@ -133,7 +124,7 @@ def query_ranking(db_file, post_lon, post_lat, group, index):
                 SELECT *, (dist_weight * dist_score + (1 - dist_weight) * profile_score) as rankingScore
                 FROM NEAR_CRAFTSMEN_WITH_RANK_HELPER
             )
-            SELECT id, first_name || ' ' || last_name as name, rankingScore
+            SELECT id, first_name || ' ' || last_name as name, rankingScore, city, street, house_number, dist
             FROM NEAR_CRAFTSMEN_WITH_RANK
             ORDER BY rankingScore desc
             LIMIT {index}, {index} + 20
@@ -151,7 +142,6 @@ def query_ranking(db_file, post_lon, post_lat, group, index):
     con.close()
 
     return ranking_list
-
 
 
 def query_ranking_opt1(db_file, post_lon, post_lat, group, index):
@@ -200,7 +190,6 @@ def query_ranking_opt1(db_file, post_lon, post_lat, group, index):
     return ranking_list
 
 
-
 def performanceComparison():
     # get the start time
     st = time.time()
@@ -217,9 +206,6 @@ def performanceComparison():
     elapsed_time1 = et1 - st1
     print('Execution time for query_ranking:', elapsed_time, 'seconds')
     print('Execution time for query_ranking_opt1:', elapsed_time1, 'seconds')
-
-    
-
 
 
 def update_craftman_databases(db_file, craftman_id, max_driving_distance, pic_score, desc_score):
