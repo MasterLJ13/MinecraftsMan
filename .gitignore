@@ -1,0 +1,7 @@
+.vscode
+.idea
+.o
+.a
+.ll
+.mlir
+build/
