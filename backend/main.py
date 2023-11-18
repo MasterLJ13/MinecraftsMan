@@ -3,8 +3,10 @@
 import os
 from flask import Flask, jsonify, request
 from interact_db import *
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 DB = "/data/check24.db"
 PC = "/data/postcode.sql"
