@@ -89,3 +89,31 @@ def query_ranking(db_file, post_lon, post_lat, group):
     con.close()
 
     return ranking_list
+
+
+def update_craftman_databases(db_file, craftman_id, max_driving_distance, pic_score, desc_score):
+    # Connect to database
+    con = sqlite3.connect(db_file)
+    cursor = con.cursor()
+    updated = {}
+
+    if max_driving_distance:
+        query = f"UPDATE service_provider_profile SET max_driving_distance = {max_driving_distance} WHERE id = {craftman_id};"
+        cursor.execute(query)
+        updated["maxDrivingDistance"] = max_driving_distance
+
+    if pic_score:
+        query = f"UPDATE quality_factor_score SET profile_picture_score = {pic_score} WHERE profile_id = {craftman_id};"
+        cursor.execute(query)
+        updated["profilePictureScore"] = pic_score
+
+
+    if desc_score:
+        query = f"UPDATE quality_factor_score SET profile_description_score = {desc_score} WHERE profile_id = {craftman_id};"
+        cursor.execute(query)
+        updated["profileDescriptionScore"] = desc_score
+
+    cursor.close()
+    con.close()
+
+    return {'id': craftman_id, 'updates': updated}
