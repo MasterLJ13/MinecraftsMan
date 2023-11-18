@@ -19,22 +19,20 @@ const ImageGallery = ({ numberOfImages }) => {
 const List = ({list}) => {
 
   const listItems = list.map(craftsman => {
-
-    const address =  craftsman.street + ' ' + craftsman.nr + ', '+ craftsman.city
+    
+    const address =  craftsman.street + ' ' + craftsman.house_number + ', '+ craftsman.city
     return <li>
         <div className= 'custom-list'>
             <p>
-                <b>{craftsman.first_name} {craftsman.last_name}</b> 
+              <b>{craftsman.name} </b> 
             <p> 
-                <img src={destination} width={20} height={20} />
-                {' ' + craftsman.distance + ' km '}
-                <ImageGallery numberOfImages={craftsman.ranking} />
-                <br></br>
-            
+              <img src={destination} width={20} height={20} />
+              {' ' + Number((craftsman.dist).toFixed(1)) + ' km '}
+              <ImageGallery numberOfImages={craftsman.rankingScore} />
+              <br></br>
             <img src={house} width={20} height={20} />
-                <a href={"https://maps.google.com/?q=" + address} target="_blank" >{address}</a>
-
-                </p>
+              <a href={"https://maps.google.com/?q=" + address} target="_blank" >{address}</a>
+              </p>
             </p>
       </div>
     </li>
@@ -42,7 +40,9 @@ const List = ({list}) => {
   );
 
   
+  
   return <ul style={mystyle}>{listItems}</ul> ;
+
 };
 
 const mystyle={
