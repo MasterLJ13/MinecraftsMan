@@ -23,4 +23,7 @@ EXPOSE 1234
 ENV FLASK_APP=main.py
 
 # Run main.py when the container launches
+# CMD ["python3", "stresstest.py"]
 CMD ["python3", "main.py"]
+
+

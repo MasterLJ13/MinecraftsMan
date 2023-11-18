@@ -14,6 +14,11 @@ SPP = "/data/service_provider_profile.sql"
 if not os.path.exists(DB):
     create_db(DB, PC, QF, SPP)
 
+# make new table with profile scores already calculated
+add_new_service_provider_table(DB)
+add_profile_score_to_providers(DB)
+test(DB)
+
 
 @app.route('/postcode_infos', methods=['GET'])
 def get_postcode_infos():
@@ -37,9 +42,18 @@ def get_craftsmen():
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
 
+    index = 0
+    try:
+        index = request.args.get("index", type=int)
+        if index is None:
+            index = 0
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+
+
     post_lon, post_lat, group = query_postcode_infos(DB, postalcode).values()
 
-    return jsonify({"craftsmen": query_ranking(DB, post_lon, post_lat, group)})
+    return jsonify({"craftsmen": query_ranking(DB, post_lon, post_lat, group, index)})
 
 @app.route('/craftman/<int:craftman_id>', methods=['PATCH'])
 def patch_craftman(craftman_id):
