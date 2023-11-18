@@ -40,7 +40,7 @@ def query_postcode_infos(db_file, postalcode):
     return {'lon': post_lon, 'lat': post_lat, 'group': group}
 
 
-def query_ranking(db_file, post_lon, post_lat, group):
+def query_ranking(db_file, post_lon, post_lat, group, index):
     # Connect to database
     con = sqlite3.connect(db_file)
     cursor = con.cursor()
@@ -74,7 +74,7 @@ def query_ranking(db_file, post_lon, post_lat, group):
             SELECT *
             FROM NEAR_MALER_WITH_RANK
             ORDER BY rank desc
-            LIMIT 20
+            LIMIT {index}, 20
         """
 
     cursor.execute(query)
