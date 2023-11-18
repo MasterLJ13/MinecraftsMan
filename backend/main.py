@@ -14,6 +14,10 @@ SPP = "/data/service_provider_profile.sql"
 if not os.path.exists(DB):
     create_db(DB, PC, QF, SPP)
 
+# make new table with profile scores already calculated
+add_new_service_provider_table(DB)
+add_profile_score_to_providers(DB)
+
 
 @app.route('/postcode_infos', methods=['GET'])
 def get_postcode_infos():
