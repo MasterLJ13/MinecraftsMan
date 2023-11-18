@@ -30,9 +30,10 @@ def add_new_service_provider_table(db_file):
         print("Connecting to database")
         conn = sqlite3.connect(db_file)
         cursor = conn.cursor()
+        cursor.execute("""DROP TABLE service_provider_profile_with_pscore""")
         cursor.execute("""
         CREATE TABLE service_provider_profile_with_pscore AS 
-           SELECT * FROM service_provider_profile""")
+           SELECT *, 0 as profile_score FROM service_provider_profile""")
         conn.commit()
         conn.close()
     except Error as e:

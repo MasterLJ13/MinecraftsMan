@@ -17,6 +17,7 @@ if not os.path.exists(DB):
 # make new table with profile scores already calculated
 add_new_service_provider_table(DB)
 add_profile_score_to_providers(DB)
+test(DB)
 
 
 @app.route('/postcode_infos', methods=['GET'])
