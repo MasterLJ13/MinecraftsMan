@@ -1,7 +1,6 @@
 import sqlite3
 import sys
 from sqlite3 import Error
-import os
 
 
 def create_db(db_file, f1, f2, f3):
@@ -26,51 +25,69 @@ def create_db(db_file, f1, f2, f3):
         return False
 
 
-def query_radius(db_file, lon, lat, rad):
-    try:
-        print("Connecting to database", file=sys.stderr)
-        conn = sqlite3.connect(db_file)
-        cursor = conn.cursor()
+def query_postcode_infos(db_file, postalcode):
+    conn = sqlite3.connect(db_file)
+    cursor = conn.cursor()
 
-        # Query data from the users table
-        query = (f"SELECT * FROM service_provider_profile WHERE lon >= {lon - 1} AND lon <= {lon + 1} AND lat >= {lat - rad} AND lat <= {lat + rad} LIMIT 20;")
+    # Get longitude, latitude and group of a postalcode
+    cursor.execute(f"SELECT lat, lon, postcode_extension_distance_group FROM postcode WHERE postcode={postalcode}")
+    post_lat, post_lon, group = cursor.fetchone()
 
-        # Execute the query
-        cursor.execute(query)
+    # Close the cursor and connection
+    cursor.close()
+    conn.close()
 
-        # Get the column names
-        columns = [col[0] for col in cursor.description]
+    return {'lon': post_lon, 'lat': post_lat, 'group': group}
 
-        # Fetch all rows
-        rows = cursor.fetchall()
 
-        # Create a list of dictionaries
-        profile_list = [dict(zip(columns, row)) for row in rows]
+def query_ranking(db_file, post_lon, post_lat, group):
+    # Connect to database
+    con = sqlite3.connect(db_file)
+    cursor = con.cursor()
 
-        # Close the cursor and connection
-        cursor.close()
-        conn.close()
+    r = 6371  # radius of earth in km
 
-        return profile_list
-    except Error as e:
-        print("Error while connecting:", e)
-        return []
-    
-    
-def add_profile_score_to_providers(db_file):
-    try:
-        print("Connecting to database")
-        conn = sqlite3.connect(db_file)
-        cursor = conn.cursor()
-        query = f"""
-            WITH PROFILE_SCORE as (
-                SELECT id, score = 0.4 * q.profile_picture_score + 0.6 * q.profile_description_score 
-                FROM quality_factor_score q
+    print(f"group: {group}", file=sys.stderr)
+
+    postcode_extension_distance_bonus = {'a': 0, 'b': 2, 'c': 5}[group[-1]]
+
+    query = f"""
+            WITH MALER_DIST as (
+                SELECT *, abs((acos((sin(lat)*sin({post_lat})) + (cos(lat) * cos({post_lat}) * cos(lon - {post_lon})) )*{r})) as dist
+                FROM service_provider_profile
+            ),
+            NEAR_MALER_DIST as (
+                SELECT *
+                FROM MALER_DIST
+                WHERE dist < CAST(((max_driving_distance/1000) + {postcode_extension_distance_bonus}) AS float)
+            ),
+            NEAR_MALER_WITH_PROFILE_SCORE as(
+                SELECT m.*, (0.4 * q.profile_picture_score) + (0.6 * q.profile_description_score) as profile_score
+                FROM NEAR_MALER_DIST m JOIN quality_factor_score q ON m.id = q.profile_id
+            ),
+            NEAR_MALER_WITH_RANK_HELPER as(
+                SELECT *, 1-(dist/80) as dist_score, CASE WHEN dist>80 THEN 0.01 ELSE 0.15 END as dist_weight
+                FROM NEAR_MALER_WITH_PROFILE_SCORE
+            ),
+            NEAR_MALER_WITH_RANK as (
+                SELECT *, (dist_weight * dist_score + (1 - dist_weight) * profile_score) as rank
+                FROM NEAR_MALER_WITH_RANK_HELPER
             )
-            SELECT * 
-            FROM PROFILE_SCORE
+            SELECT *
+            FROM NEAR_MALER_WITH_RANK
+            ORDER BY rank desc
+            LIMIT 20
         """
-        cursor.execute(query)
-    except Error as e:
-        print(e)
 
+    cursor.execute(query)
+    # Extract column header of the table
+    columns = [col[0] for col in cursor.description]
+    # Get all entries
+    rows = cursor.fetchall()
+    # Combine header and entries
+    ranking_list = [dict(zip(columns, row)) for row in rows]
+
+    cursor.close()
+    con.close()
+
+    return ranking_list
