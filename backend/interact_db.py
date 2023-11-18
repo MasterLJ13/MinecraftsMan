@@ -47,8 +47,6 @@ def query_ranking(db_file, post_lon, post_lat, group):
 
     r = 6371  # radius of earth in km
 
-    print(f"group: {group}", file=sys.stderr)
-
     postcode_extension_distance_bonus = {'a': 0, 'b': 2, 'c': 5}[group[-1]]
 
     query = f"""
