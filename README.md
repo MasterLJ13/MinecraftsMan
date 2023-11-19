@@ -8,7 +8,11 @@ Deploy the frontend and backend docker container by executing the following comm
 ```bash
 docker-compose up --build
 ```
-There will be two running docker containers. One for the frontend and one for the backend.
+or
+```bash
+docker-compose up -d
+```
+There are two running docker containers. One for the frontend and one for the backend.
 
 The benchmarking request: \
 `GET /craftsmen?postalcode={postalcode}` and `PATCH /craftman/{craftman_id}` should be performed on 
