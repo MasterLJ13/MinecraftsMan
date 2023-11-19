@@ -1,5 +1,3 @@
-# backend/main.py
-
 import os
 from flask import Flask, jsonify, request
 from interact_db import *
@@ -21,22 +19,27 @@ if not os.path.exists(DB):
 def get_craftsmen():
     try:
         postalcode = request.args.get('postalcode')
+        # Check if postalcode was provided
         if not postalcode:
             raise ValueError("postal code is required")
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
 
     try:
+        # Index option for 'view more' option. Specify start index / how many entries should be skipped
         index = request.args.get("index", type=int)
         if index is None:
             index = 0
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
 
+    # Get latitude, longitude and group of a postal code
     result = query_postcode_infos(DB, postalcode)
+    # If the postal code was not found return not found
     if not result:
         return jsonify({"error": "postal code not found"}), 400
 
+    # Query craftsman sorted by rank
     return jsonify({"craftsmen": query_ranking(DB, result[0], result[1], result[2], index)})
 
 
@@ -52,9 +55,8 @@ def patch_craftman(craftman_id):
     pic_score = patch_data.get('profilePictureScore')
     desc_score = patch_data.get('profileDescriptionScore')
 
-    response_data = update_craftman_databases(DB, craftman_id, max_driving_distance, pic_score, desc_score)
-
-    return jsonify(response_data)
+    # Update craftsman database with the provided information
+    return jsonify(update_craftman_databases(DB, craftman_id, max_driving_distance, pic_score, desc_score))
 
 
 if __name__ == '__main__':
