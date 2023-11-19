@@ -1,13 +1,12 @@
 import React from 'react';
-import { craftsman } from './data.js';
 import './List.css';
 import destination from './images/destination.svg';
 import house from './images/house.svg';
 import star from './images/star.svg';
 
 const ImageGallery = ({ numberOfImages }) => {
-  const images = Array.from({ length: numberOfImages }, (_, index) => (
-    <img key={index} src={star} width={20} height={20}/>
+  const images = Array.from({ length: numberOfImages *2}, (_, index) => (
+    <img key={index} src={star} width={20} height={20} alt= "ranking"/>
   ));
 
   return (
@@ -26,12 +25,12 @@ const List = ({list}) => {
             <p>
               <b>{craftsman.name} </b> 
             <p> 
-              <img src={destination} width={20} height={20} />
+              <img src={destination} width={20} height={20} alt="distance" />
               {' ' + Number((craftsman.dist).toFixed(1)) + ' km '}
               <ImageGallery numberOfImages={craftsman.rankingScore} />
               <br></br>
-            <img src={house} width={20} height={20} />
-              <a href={"https://maps.google.com/?q=" + address} target="_blank" >{address}</a>
+            <img src={house} width={20} height={20} alt="address" />
+              <a href={"https://maps.google.com/?q=" + address} target="_blank" rel="noopener noreferrer">{address}</a>
               </p>
             </p>
       </div>

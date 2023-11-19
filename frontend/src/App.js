@@ -2,7 +2,6 @@ import logo from './images/check24_logo.svg';
 import './App.css';
 import React, { useState } from 'react';
 import List from './List.js'
-import { craftsman } from './data.js';
 import './List.css';
 
 
@@ -22,7 +21,7 @@ function App() {
   const handleButtonClick = async () => {
     setShowLoadMoreButton(true)
     try {
-      const response = await fetch('http://localhost:1234/craftsmen' + '?' + "postalcode=" + currentPostcode);
+      const response = await fetch('http://localhost:1234/craftsmen?postalcode=' + currentPostcode);
       
       if (response.status === 400) {
         // Handle the case where postal code is not found
@@ -48,7 +47,7 @@ function App() {
   const handleLoadMore = async (e)=> {
     const c = currentIndex + list.length;
     try {
-      const response = await fetch('http://localhost:1234/craftsmen' + '?' + "postalcode=" + currentPostcode + "&" + "index=" + c);
+      const response = await fetch('http://localhost:1234/craftsmen?postalcode=' + currentPostcode + "&index=" + c);
       const result = await response.json();
       setList((list) => list.concat([...result.craftsmen]));
       if (result.craftsmen.length < 20) {
@@ -63,7 +62,7 @@ function App() {
   return (
     <div className="App">
       <div className="banner">
-      <img src={logo} />
+      <img src={logo} alt="check24 logo"/>
       </div>
       <div className="banner2">
       <h1>Discover Craftsmanship, Find Quality.</h1>
