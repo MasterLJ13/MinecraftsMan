@@ -17,19 +17,6 @@ if not os.path.exists(DB):
     create_db(DB, PC, QF, SPP)
 
 
-@app.route('/postcode_infos', methods=['GET'])
-def get_postcode_infos():
-    try:
-        postalcode = request.args.get('postalcode')
-        if not postalcode:
-            raise ValueError("postal code is required")
-    except ValueError as e:
-        return jsonify({"error": str(e)}), 400
-
-    postcode_infos = query_postcode_infos(DB, postalcode)
-    return jsonify(postcodes=postcode_infos)
-
-
 @app.route('/craftsmen', methods=['GET'])
 def get_craftsmen():
     try:
@@ -51,6 +38,7 @@ def get_craftsmen():
         return jsonify({"error": "postal code not found"}), 400
 
     return jsonify({"craftsmen": query_ranking(DB, result[0], result[1], result[2], index)})
+
 
 @app.route('/craftman/<int:craftman_id>', methods=['PATCH'])
 def patch_craftman(craftman_id):
