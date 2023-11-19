@@ -127,7 +127,7 @@ def query_ranking(db_file, post_lon, post_lat, group, index):
             SELECT id, first_name || ' ' || last_name as name, rankingScore, city, street, house_number, dist
             FROM NEAR_CRAFTSMEN_WITH_RANK
             ORDER BY rankingScore desc
-            LIMIT {index}, {index} + 20
+            LIMIT {index}, 20
         """
 
     cursor.execute(query)
