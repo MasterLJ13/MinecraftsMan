@@ -1,13 +1,11 @@
 import sqlite3
-from sqlite3 import Error
-import sys
 import time
 
 DB = "/data/check24.db"
 
 
 def create_db(db_file, f1, f2, f3):
-    print("Connecting to database")
+    # Connect to database
     conn = sqlite3.connect(db_file)
     # Read and import all three sql files
     with open(f1) as f:
@@ -18,64 +16,45 @@ def create_db(db_file, f1, f2, f3):
         conn.executescript(f.read())
     conn.close()
 
+
+# Add new service provider table to the database
 def add_new_service_provider_table(db_file):
-    try:
-        print("Connecting to database")
-        conn = sqlite3.connect(db_file)
-        cursor = conn.cursor()
-        cursor.execute("""DROP TABLE service_provider_profile_with_pscore""")
-        cursor.execute("""
-        CREATE TABLE service_provider_profile_with_pscore AS 
-           SELECT *, 0 as profile_score FROM service_provider_profile""")
-        conn.commit()
-        conn.close()
-    except Error as e:
-        print(e)
+    conn = sqlite3.connect(db_file)
+    cursor = conn.cursor()
+    cursor.execute("""DROP TABLE service_provider_profile_with_pscore""")
+    cursor.execute("""
+    CREATE TABLE service_provider_profile_with_pscore AS 
+       SELECT *, 0 as profile_score FROM service_provider_profile""")
+    conn.commit()
+    cursor.close()
+    conn.close()
 
 
+# Precalculate the profile_score of every craftsman
 def add_profile_score_to_providers(db_file):
-    try:
-        print("Connecting to database")
-        conn = sqlite3.connect(db_file)
-        cursor = conn.cursor()
-        query = f"""
-        UPDATE service_provider_profile_with_pscore
-        SET profile_score = (
-            SELECT 0.4 * q.profile_picture_score + 0.6 * q.profile_description_score
-            FROM quality_factor_score q
-            WHERE service_provider_profile_with_pscore.id = q.profile_id
-            )
-        WHERE service_provider_profile_with_pscore.id IN (
-        SELECT q.profile_id
+    conn = sqlite3.connect(db_file)
+    cursor = conn.cursor()
+    query = f"""
+    UPDATE service_provider_profile_with_pscore
+    SET profile_score = (
+        SELECT 0.4 * q.profile_picture_score + 0.6 * q.profile_description_score
         FROM quality_factor_score q
-        );
-        """
-        cursor.execute(query)
-        conn.commit()
-        conn.close()
-    except Error as e:
-        print(e)
+        WHERE service_provider_profile_with_pscore.id = q.profile_id
+        )
+    WHERE service_provider_profile_with_pscore.id IN (
+    SELECT q.profile_id
+    FROM quality_factor_score q
+    );
+    """
+    cursor.execute(query)
+    conn.commit()
+    cursor.close()
+    conn.close()
 
 
-def test(db_file):
-    try:
-        conn = sqlite3.connect(db_file)
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM quality_factor_score WHERE profile_id=?", (42,))
-        rows = cur.fetchall()
-        for row in rows:
-            print(row, file=sys.stderr)
-        cur.execute("SELECT * FROM service_provider_profile_with_pscore WHERE id=?", (42,))
-        rows = cur.fetchall()
-        for row in rows:
-            print(row, file=sys.stderr)
-        conn.commit()
-        conn.close()
-    except Error as e:
-        print(e)
-
-
+# Query postal codes information about longitude, latitude and group
 def query_postcode_infos(db_file, postalcode):
+    # Connect to database
     conn = sqlite3.connect(db_file)
     cursor = conn.cursor()
 
@@ -94,6 +73,7 @@ def query_postcode_infos(db_file, postalcode):
     return res
 
 
+# Query craftsman from the database and assign a ranking
 def query_ranking(db_file, post_lon, post_lat, group, index):
     # Connect to database
     con = sqlite3.connect(db_file)
@@ -102,6 +82,11 @@ def query_ranking(db_file, post_lon, post_lat, group, index):
     r = 6371  # Radius of earth in km
     postcode_extension_distance_bonus = {'a': 0, 'b': 2, 'c': 5}[group[-1]]
 
+    # Query structure:
+    # 1. Calculate the distance between the customer and the craftsman
+    # 2. Filter every craftsman which max driving range is greater than the distance
+    # 3. & 4. & 5.  Calculate profile score & distance weight & final score
+    # 6. Select all relevant columns
     query = f"""
             WITH CRAFTSMEN_DIST as (
                 SELECT *, abs((acos((sin(lat)*sin({post_lat})) + (cos(lat) * cos({post_lat}) * cos(lon - {post_lon})) ) * {r})) as dist
@@ -144,6 +129,7 @@ def query_ranking(db_file, post_lon, post_lat, group, index):
     return ranking_list
 
 
+# Another, potentially faster, version of querying the sorted craftsman by using precalculated profile_scores
 def query_ranking_opt1(db_file, post_lon, post_lat, group, index):
     # Connect to database
     con = sqlite3.connect(db_file)
@@ -152,6 +138,11 @@ def query_ranking_opt1(db_file, post_lon, post_lat, group, index):
     r = 6371  # Radius of earth in km
     postcode_extension_distance_bonus = {'a': 0, 'b': 2, 'c': 5}[group[-1]]
 
+    # Query structure:
+    # 1. Calculate the distance between the customer and the craftsman
+    # 2. Filter every craftsman which max driving range is greater than the distance
+    # 3. & 4. Calculate distance weight & final score with **precalculated profile_score** for potential speedup
+    # 6. Select all relevant columns
     query = f"""
             WITH CRAFTSMEN_DIST as (
                 SELECT *, abs((acos((sin(lat)*sin({post_lat})) + (cos(lat) * cos({post_lat}) * cos(lon - {post_lon})) )*{r})) as dist
@@ -190,7 +181,8 @@ def query_ranking_opt1(db_file, post_lon, post_lat, group, index):
     return ranking_list
 
 
-def performanceComparison():
+# Performance test comparing two implementations
+def performance_comparison():
     # get the start time
     st = time.time()
     query_ranking(DB, 13.719, 51.06, 'group_a', 0)
@@ -208,28 +200,31 @@ def performanceComparison():
     print('Execution time for query_ranking_opt1:', elapsed_time1, 'seconds')
 
 
+# Update the databases with the given parameters
 def update_craftman_databases(db_file, craftman_id, max_driving_distance, pic_score, desc_score):
     # Connect to database
-    con = sqlite3.connect(db_file)
-    cursor = con.cursor()
+    conn = sqlite3.connect(db_file)
+    cursor = conn.cursor()
     updated = {}
 
-    if max_driving_distance:
+    # Each of the values gets checked whether it is set. If so the database entries get updated.
+    if max_driving_distance is not None:
         query = f"UPDATE service_provider_profile SET max_driving_distance = {max_driving_distance} WHERE id = {craftman_id};"
         cursor.execute(query)
         updated["maxDrivingDistance"] = max_driving_distance
 
-    if pic_score:
+    if pic_score is not None:
         query = f"UPDATE quality_factor_score SET profile_picture_score = {pic_score} WHERE profile_id = {craftman_id};"
         cursor.execute(query)
         updated["profilePictureScore"] = pic_score
 
-    if desc_score:
+    if desc_score is not None:
         query = f"UPDATE quality_factor_score SET profile_description_score = {desc_score} WHERE profile_id = {craftman_id};"
         cursor.execute(query)
         updated["profileDescriptionScore"] = desc_score
 
+    conn.commit()
     cursor.close()
-    con.close()
+    conn.close()
 
     return {'id': craftman_id, 'updates': updated}
