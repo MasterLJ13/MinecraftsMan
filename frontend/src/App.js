@@ -1,6 +1,6 @@
 import logo from './images/check24_logo.svg';
 import './App.css';
-import React, { useState } from 'react';
+import React, { useState, useEffect} from 'react';
 import List from './List.js'
 import './List.css';
 
@@ -16,7 +16,29 @@ function App() {
 
   const handleInput = (e) => {
     setCurrentPostcode(e.target.value)
-  } 
+  }
+
+  useEffect(() => {
+    const intervalId = setInterval(async () => {
+
+      if(showList) {
+        // Perform fetch request here
+        // For example, fetching data every 5 minutes
+        const response = await fetch('http://localhost:1234/craftsmen?postalcode=' + currentPostcode);
+        const result = await response.json();
+        console.error("a")
+        setList(result.craftsmen);
+        console.error(result.craftsmen)
+        if (result.craftsmen.length < 20) {
+          setShowLoadMoreButton(false);
+        }
+      }
+    },  5 * 60 * 1000); // 5 minutes in milliseconds
+
+    // Cleanup the interval when the component unmounts
+    return () => clearInterval(intervalId);
+  }, [showList, currentPostcode]); // Run the effect whenever currentPostcode changes
+
 
   const handleButtonClick = async () => {
     setShowLoadMoreButton(true)
